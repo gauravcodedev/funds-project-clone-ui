@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import {
@@ -62,6 +62,64 @@ function SetupProfile() {
   })
 
   const { execute, loading, error: apiError } = useAxios();
+  const { execute: fetchProfile, loading: fetchingProfile } = useAxios();
+
+  // Fetch profile data on component mount
+  useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        const response = await fetchProfile({
+          url: '/api/profile',
+          method: 'GET'
+        });
+
+        if (response.success && response.user) {
+          // Transform API response back to form field names
+          const apiData = response.user;
+          
+          // Format date from ISO string to YYYY-MM-DD format
+          const formatDate = (dateString) => {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          };
+
+          const formData = {
+            fullName: apiData.fullName || '',
+            dateOfBirth: formatDate(apiData.dateOfBirth) || '',
+            gender: apiData.gender || '',
+            maritalStatus: apiData.maritalStatus || '',
+            fathersName: apiData.fatherName || '', // Mapped from fatherName
+            mothersName: apiData.motherName || '', // Mapped from motherName
+            email: apiData.email || '',
+            currentAddress: apiData.address || '', // Mapped from address
+            city: apiData.city || '',
+            state: apiData.state || '',
+            pincode: apiData.zipcode || '', // Mapped from zipcode
+            residentialStatus: apiData.residentialStatus || '',
+            yearsAtAddress: apiData.durationOfStayYears || 0,
+            monthsAtAddress: apiData.durationOfStayMonths || 0,
+            numberOfDependents: apiData.numberOfDependents || 0,
+            educationalQualification: apiData.educationalQualification || '',
+          };
+
+          // Populate form with fetched data
+          reset(formData);
+          // Also save to localStorage for consistency
+          localStorage.setItem('profileFormData', JSON.stringify(formData));
+        }
+      } catch (err) {
+        // If profile doesn't exist or error occurs, use localStorage data
+        console.log('No profile data found or error fetching:', err);
+        // Form will use localStorage data from defaultValues
+      }
+    };
+
+    loadProfileData();
+  }, [fetchProfile, reset]);
 
   const handleSave = handleSubmit((data) => {
     localStorage.setItem('profileFormData', JSON.stringify(data))
@@ -168,10 +226,18 @@ function SetupProfile() {
             </Typography>
           </Box>
 
-          <BasicPersonalInformation control={control} errors={errors} />
-          <ContactInformation control={control} errors={errors} />
-          <ResidentialInformation control={control} errors={errors} />
-          <AdditionalDetails control={control} errors={errors} />
+          {fetchingProfile ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body1">Loading profile data...</Typography>
+            </Box>
+          ) : (
+            <>
+              <BasicPersonalInformation control={control} errors={errors} />
+              <ContactInformation control={control} errors={errors} />
+              <ResidentialInformation control={control} errors={errors} />
+              <AdditionalDetails control={control} errors={errors} />
+            </>
+          )}
 
           {apiError && (
             <Box sx={{ mt: 2 }}>
@@ -190,7 +256,7 @@ function SetupProfile() {
             <Button
               variant="contained"
               onClick={handleNext}
-              disabled={loading}
+              disabled={loading || fetchingProfile}
               className={styles.nextButton}
             >
               {loading ? 'Processing...' : 'Next'}
