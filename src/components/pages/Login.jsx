@@ -220,9 +220,9 @@ const LoginPage = () => {
                                 helperText={phoneError || ""}
                             />
 
-                            {(phoneError || apiError) && (
+                            {apiError && (
                                 <Alert severity="error" sx={{ mt: 1, mb: 1 }}>
-                                    {phoneError || apiError}
+                                    {apiError}
                                 </Alert>
                             )}
 
