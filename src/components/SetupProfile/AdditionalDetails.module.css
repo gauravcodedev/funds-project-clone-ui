@@ -1,0 +1,24 @@
+/* AdditionalDetails Component Styles - Scoped CSS Module */
+.sectionContainer {
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  color: #333333;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.label {
+  color: #000000;
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.requiredAsterisk {
+  color: #d32f2f;
+}
+
