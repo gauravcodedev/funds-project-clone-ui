@@ -14,9 +14,24 @@ import ResidentialInformation from './ResidentialInformation'
 import AdditionalDetails from './AdditionalDetails'
 import styles from './SetupProfile.module.css'
 import { validationSchema } from './validationSchema'
+import { useAxios } from '../../hooks'
+import { Alert } from '@mui/material'
 
 function SetupProfile() {
   const [showThankYou, setShowThankYou] = useState(false)
+
+  // Load saved data from localStorage
+  const getSavedData = () => {
+    try {
+      const saved = localStorage.getItem('profileFormData')
+      return saved ? JSON.parse(saved) : {}
+    } catch (error) {
+      console.error('Error loading saved data:', error)
+      return {}
+    }
+  }
+
+  const savedData = getSavedData()
 
   const {
     control,
@@ -26,38 +41,73 @@ function SetupProfile() {
   } = useForm({
     resolver: yupResolver(validationSchema),
     defaultValues: {
-      fullName: '',
-      dateOfBirth: '',
-      gender: '',
-      maritalStatus: '',
-      fathersName: '',
-      mothersName: '',
-      email: '',
-      currentAddress: '',
-      city: '',
-      state: '',
-      pincode: '',
-      residentialStatus: '',
-      yearsAtAddress: undefined,
-      monthsAtAddress: undefined,
-      numberOfDependents: undefined,
-      educationalQualification: '',
+      fullName: savedData.fullName || '',
+      dateOfBirth: savedData.dateOfBirth || '',
+      gender: savedData.gender || '',
+      maritalStatus: savedData.maritalStatus || '',
+      fathersName: savedData.fathersName || '',
+      mothersName: savedData.mothersName || '',
+      email: savedData.email || '',
+      currentAddress: savedData.currentAddress || '',
+      city: savedData.city || '',
+      state: savedData.state || '',
+      pincode: savedData.pincode || '',
+      residentialStatus: savedData.residentialStatus || '',
+      yearsAtAddress: savedData.yearsAtAddress,
+      monthsAtAddress: savedData.monthsAtAddress,
+      numberOfDependents: savedData.numberOfDependents,
+      educationalQualification: savedData.educationalQualification || '',
     },
     mode: 'onChange',
   })
 
+  const { execute, loading, error: apiError } = useAxios();
+
   const handleSave = handleSubmit((data) => {
-    console.log('Form Data:', data)
+    localStorage.setItem('profileFormData', JSON.stringify(data))
+    alert('Progress saved successfully!')
   })
 
-  const handleNext = handleSubmit((data) => {
+  const handleNext = handleSubmit(async (data) => {
+    // Helper to capitalize first letter
+    const capitalize = (val) => {
+      if (typeof val !== 'string' || val.length === 0) return val;
+      return val.charAt(0).toUpperCase() + val.slice(1);
+    };
+
+    // Transform form data to match the requested payload structure
+    const payload = {
+      fullName: capitalize(data.fullName),
+      dateOfBirth: data.dateOfBirth,
+      gender: capitalize(data.gender),
+      maritalStatus: capitalize(data.maritalStatus),
+      fatherName: capitalize(data.fathersName), // Mapped from fathersName
+      motherName: capitalize(data.mothersName), // Mapped from mothersName
+      email: data.email,
+      address: capitalize(data.currentAddress), // Mapped from currentAddress
+      city: capitalize(data.city),
+      state: capitalize(data.state),
+      zipcode: data.pincode,        // Mapped from pincode
+      residentialStatus: capitalize(data.residentialStatus),
+      durationOfStayYears: Number(data.yearsAtAddress) || 0,
+      durationOfStayMonths: Number(data.monthsAtAddress) || 0,
+      numberOfDependents: Number(data.numberOfDependents) || 0,
+      educationalQualification: capitalize(data.educationalQualification)
+    };
+
     try {
-      localStorage.setItem('profileFormData', JSON.stringify(data))
-      console.log('Data saved to localStorage and navigating to next page')
-      alert('Form data saved successfully! Proceeding to next step...')
-      setShowThankYou(true)
-    } catch (error) {
-      console.error('Error saving data:', error)
+      const response = await execute({
+        url: '/api/profile',
+        method: 'PUT',
+        data: payload
+      });
+
+      if (response.success) {
+        localStorage.setItem('profileFormData', JSON.stringify(data));
+        setShowThankYou(true);
+      }
+    } catch (err) {
+      console.error('Error submitting profile:', err);
     }
   })
 
@@ -84,6 +134,7 @@ function SetupProfile() {
               variant="contained"
               onClick={() => {
                 setShowThankYou(false)
+                localStorage.removeItem('profileFormData')
                 reset()
               }}
               className={styles.thankYouButton}
@@ -122,6 +173,12 @@ function SetupProfile() {
           <ResidentialInformation control={control} errors={errors} />
           <AdditionalDetails control={control} errors={errors} />
 
+          {apiError && (
+            <Box sx={{ mt: 2 }}>
+              <Alert severity="error">{apiError}</Alert>
+            </Box>
+          )}
+
           <Box className={styles.buttonContainer}>
             <Button
               variant="outlined"
@@ -133,9 +190,10 @@ function SetupProfile() {
             <Button
               variant="contained"
               onClick={handleNext}
+              disabled={loading}
               className={styles.nextButton}
             >
-              Next
+              {loading ? 'Processing...' : 'Next'}
             </Button>
           </Box>
         </Paper>
