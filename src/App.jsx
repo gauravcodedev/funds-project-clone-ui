@@ -1,10 +1,11 @@
 import SetupProfile from './components/SetupProfile/SetupProfile';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LoginPage from './components/pages/Login';
+import { Routes, Route } from "react-router-dom";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<SetupProfile />} />
+      <Route path="/" element={<LoginPage />} />
       <Route path="/profile" element={<SetupProfile />} />
     </Routes>
   )

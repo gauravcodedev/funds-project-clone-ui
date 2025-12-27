@@ -33,6 +33,12 @@ function ResidentialInformation({ control, errors = {} }) {
                   error={!!errors.currentAddress}
                   helperText={errors.currentAddress?.message}
                   sx={inputFieldStyles}
+                  onChange={(e) => {
+                    const transformed = transformInputValue('currentAddress', e.target.value)
+                    if (transformed !== null) {
+                      field.onChange(transformed)
+                    }
+                  }}
                 />
               )}
             />
