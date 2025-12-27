@@ -47,7 +47,11 @@ export const validationSchema = yup.object().shape({
   email: yup
     .string()
     .required('Email ID is required')
-    .email('Please enter a valid email address'),
+    .email('Please enter a valid email address')
+    .matches(
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      'Email must include a domain extension (e.g., .com, .org)'
+    ),
   
   currentAddress: yup
     .string()
