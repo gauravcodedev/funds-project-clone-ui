@@ -35,7 +35,28 @@ const useAxios = () => {
             setData(response.data);
             return response.data;
         } catch (err) {
-            const errorMessage = err.response?.data?.message || err.message || 'An unexpected error occurred';
+            // Extract error message with priority: API message > Network error > Generic
+            let errorMessage = 'An unexpected error occurred';
+            
+            if (err.response) {
+                // Server responded with error status
+                errorMessage = err.response?.data?.message || 
+                             err.response?.data?.error || 
+                             `Server error (${err.response.status})`;
+            } else if (err.request) {
+                // Request made but no response received
+                if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+                    errorMessage = 'Request timeout. Please check your connection and try again.';
+                } else if (err.message === 'Network Error' || !navigator.onLine) {
+                    errorMessage = 'Network error. Please check your internet connection.';
+                } else {
+                    errorMessage = 'Unable to reach server. Please try again later.';
+                }
+            } else {
+                // Error in request setup
+                errorMessage = err.message || errorMessage;
+            }
+            
             setError(errorMessage);
             throw err;
         } finally {

@@ -191,9 +191,11 @@ function SetupProfile() {
             <Button
               variant="contained"
               onClick={() => {
-                setShowThankYou(false)
+                // Clear all data
                 localStorage.removeItem('profileFormData')
-                reset()
+                localStorage.removeItem('token')
+                // Force full page reload to login page
+                window.location.href = '/'
               }}
               className={styles.thankYouButton}
             >

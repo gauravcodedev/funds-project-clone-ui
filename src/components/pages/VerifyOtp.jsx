@@ -35,6 +35,11 @@ const VerifyOtp = ({ phoneNumber, countryCode }) => {
     if (!canResend) return;
 
     try {
+      // Clear OTP fields immediately when resend is clicked
+      setOtp(["", "", "", "", "", ""]);
+      // Clear any previous errors
+      reset();
+      
       await execute({
         url: '/api/auth/resend-otp',
         method: 'POST',
@@ -45,10 +50,10 @@ const VerifyOtp = ({ phoneNumber, countryCode }) => {
       // Reset timer on success
       setTimer(30);
       setCanResend(false);
-      // Clear OTP fields
-      setOtp(["", "", "", "", "", ""]);
       // Focus the first input field
-      document.getElementById('otp-0')?.focus();
+      setTimeout(() => {
+        document.getElementById('otp-0')?.focus();
+      }, 100);
     } catch (err) {
       // Error handled by hook
     }

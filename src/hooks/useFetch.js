@@ -30,7 +30,25 @@ const useFetch = (url, options = {}) => {
             });
             setData(response.data);
         } catch (err) {
-            const errorMessage = err.response?.data?.message || err.message || 'Error fetching data';
+            // Extract error message with priority: API message > Network error > Generic
+            let errorMessage = 'Error fetching data';
+            
+            if (err.response) {
+                errorMessage = err.response?.data?.message || 
+                             err.response?.data?.error || 
+                             `Server error (${err.response.status})`;
+            } else if (err.request) {
+                if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+                    errorMessage = 'Request timeout. Please check your connection and try again.';
+                } else if (err.message === 'Network Error' || !navigator.onLine) {
+                    errorMessage = 'Network error. Please check your internet connection.';
+                } else {
+                    errorMessage = 'Unable to reach server. Please try again later.';
+                }
+            } else {
+                errorMessage = err.message || errorMessage;
+            }
+            
             setError(errorMessage);
         } finally {
             setLoading(false);

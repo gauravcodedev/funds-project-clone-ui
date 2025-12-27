@@ -5,7 +5,7 @@ import axios from 'axios';
  * You can adjust the baseURL and add authorization logic here.
  */
 const axiosInstance = axios.create({
-    baseURL: 'https://naturally-profiles-domestic-wanted.trycloudflare.com',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://naturally-profiles-domestic-wanted.trycloudflare.com',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -29,9 +29,25 @@ axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Logic for unauthorized access (e.g., redirect to login)
-            console.warn('Unauthorized access - potential token expiry');
+            // Clear token and redirect to login on unauthorized access
+            console.warn('Unauthorized access - redirecting to login');
+            localStorage.removeItem('token');
+            localStorage.removeItem('profileFormData');
+            // Only redirect if we're not already on the login page
+            if (window.location.pathname !== '/') {
+                window.location.href = '/';
+            }
         }
+        
+        // Handle network errors
+        if (!error.response) {
+            if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+                error.message = 'Request timeout. Please check your connection and try again.';
+            } else if (error.message === 'Network Error' || navigator.onLine === false) {
+                error.message = 'Network error. Please check your internet connection.';
+            }
+        }
+        
         return Promise.reject(error);
     }
 );
