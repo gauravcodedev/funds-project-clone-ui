@@ -7,6 +7,7 @@ import {
   Paper,
   Typography,
   Button,
+  Alert,
 } from '@mui/material'
 import BasicPersonalInformation from './BasicPersonalInformation'
 import ContactInformation from './ContactInformation'
@@ -15,7 +16,6 @@ import AdditionalDetails from './AdditionalDetails'
 import styles from './SetupProfile.module.css'
 import { validationSchema } from './validationSchema'
 import { useAxios } from '../../hooks'
-import { Alert } from '@mui/material'
 
 function SetupProfile() {
   const [showThankYou, setShowThankYou] = useState(false)

@@ -167,7 +167,7 @@ const VerifyOtp = ({ phoneNumber, countryCode }) => {
 
         {apiError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {apiError ? "Invalid OTP" : ''}
+            {apiError}
           </Alert>
         )}
 
